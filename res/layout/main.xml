@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_margin="10dp"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:adjustViewBounds="true"
+        android:padding="5dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/blank_album_art" />
+
+    <TextView
+        android:id="@+id/songTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/albumArt"
+        android:layout_margin="5dp"
+        android:fontFamily="sans-serif-thin"
+        android:padding="5dp"
+        android:textSize="14dp" />
+
+    <LinearLayout
+        android:id="@+id/playercontrols"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/songTitle"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/redthumbview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:padding="0dp"
+            android:src="@drawable/redthumb" />
+
+        <ImageView
+            android:id="@+id/greenthumbview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:padding="0dp"
+            android:src="@drawable/greenthumb" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/playPause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/albumArt"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="42dp"
+        android:src="@drawable/play" />
+
+</RelativeLayout>
