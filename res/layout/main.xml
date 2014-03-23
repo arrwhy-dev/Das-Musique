@@ -5,62 +5,79 @@
     android:layout_margin="10dp"
     android:orientation="vertical" >
 
-    <ImageView
-        android:id="@+id/albumArt"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:adjustViewBounds="true"
-        android:padding="5dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/blank_album_art" />
-
-    <TextView
-        android:id="@+id/songTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/albumArt"
-        android:layout_margin="5dp"
-        android:fontFamily="sans-serif-thin"
-        android:padding="5dp"
-        android:textSize="14dp" />
-
-    <LinearLayout
-        android:id="@+id/playercontrols"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_below="@id/songTitle"
-        android:orientation="horizontal" >
+        android:orientation="vertical" >
 
         <ImageView
-            android:id="@+id/redthumbview"
-            android:layout_width="wrap_content"
+            android:id="@+id/albumArt"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:layout_weight="1"
-            android:clickable="true"
-            android:padding="0dp"
-            android:src="@drawable/redthumb" />
+            android:layout_margin="5dp"
+            android:adjustViewBounds="true"
+            android:src="@drawable/blank_album_art"
+            android:padding="5dp"
+            android:scaleType="fitXY" />
 
         <ImageView
-            android:id="@+id/greenthumbview"
+            android:id="@+id/playPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:layout_weight="1"
-            android:clickable="true"
-            android:padding="0dp"
-            android:src="@drawable/greenthumb" />
-    </LinearLayout>
+            android:layout_alignBottom="@+id/albumArt"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="42dp"
+            android:src="@drawable/play" />
 
-    <ImageView
-        android:id="@+id/playPause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/albumArt"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="42dp"
-        android:src="@drawable/play" />
+        <LinearLayout
+            android:id="@+id/playercontrols"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:id="@+id/redthumbview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:padding="0dp"
+                android:src="@drawable/redthumb" />
+
+            <ImageView
+                android:id="@+id/greenthumbview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:padding="0dp"
+                android:src="@drawable/greenthumb" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/songTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/playercontrols"
+            android:layout_below="@id/albumArt"
+            android:layout_margin="5dp"
+            android:fontFamily="sans-serif-thin"
+            android:padding="5dp"
+            android:textSize="14dp" />
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/loadingcover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true" >
+
+      
+
+    </FrameLayout>
 
 </RelativeLayout>

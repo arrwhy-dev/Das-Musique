@@ -9,11 +9,12 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import Api.ApiKeys;
 import Models.Track;
 import Tasks.GetAlbumArtTask;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -24,7 +25,12 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,14 +42,14 @@ import com.rdio.android.api.RdioListener;
 import com.rdio.android.api.services.RdioAuthorisationException;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class MainActivity extends Activity implements RdioListener {
+public class MainActivity extends Activity implements RdioListener
+{
 
 	private MediaPlayer player;
 	private Queue<Track> trackQueue;
 	private static Rdio rdio;
-	private static String TAG = "YO SOMETHING WENT WRONG";
-	private static final String appKey = "x9jpn8knsqqrxm3tskp9gdfr";
-	private static final String appSecret = "F5Z6Qvu9Ea";
+
+	private static String TAG = MainActivity.class.getSimpleName();
 	private static String accessToken = null;
 	private static String accessTokenSecret = null;
 	private static final String PREF_ACCESSTOKEN = "prefs.accesstoken";
@@ -54,16 +60,18 @@ public class MainActivity extends Activity implements RdioListener {
 	private ImageView albumArt;
 	private ImageView playPause;
 	private TextView mSongName;
-
 	private ImageView mgreenThumb;
 	private ImageView mredThumb;
+	private FrameLayout fm;
+	private GestureDetector mGestureDetector;
+	private int mCurrentLayoutState, mCount;
+	private static final int SWIPE_MIN_DISTANCE = 120;
+	private static final int SWIPE_MAX_OFF_PATH = 250;
+	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
 
-	private DialogFragment getUserDialog;
-	private DialogFragment getCollectionDialog;
-
-	// Our model for the metadata for a track that we care about
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState)
+	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
@@ -76,30 +84,80 @@ public class MainActivity extends Activity implements RdioListener {
 		mredThumb.setOnClickListener(new GenericClickListener());
 		playPause.setOnClickListener(new GenericClickListener());
 		albumArt.setOnClickListener(new GenericClickListener());
-
+		fm = (FrameLayout) findViewById(R.id.loadingcover);
 		trackQueue = new LinkedList<Track>();
 
-		if (rdio == null) {
+		albumArt.setOnTouchListener(new View.OnTouchListener()
+		{
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event)
+			{
+				return mGestureDetector.onTouchEvent(event);
+			}
+		});
+
+		mGestureDetector = new GestureDetector(this,
+				new GestureDetector.SimpleOnGestureListener()
+				{
+					@Override
+					public boolean onFling(MotionEvent e1, MotionEvent e2,
+							float velocityX, float velocityY)
+					{
+						try
+						{
+							if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+								return false;
+							// right to left swipe
+							if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
+									&& Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY)
+							{
+								Toast.makeText(MainActivity.this, "Left Swipe",
+										Toast.LENGTH_SHORT).show();
+								next(true);
+							}
+							else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+									&& Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY)
+							{
+								Toast.makeText(MainActivity.this,
+										"Right Swipe", Toast.LENGTH_SHORT)
+										.show();
+								next(true);
+							}
+						}
+						catch (Exception e)
+						{
+							// nothing
+						}
+						return false;
+					}
+				});
+
+		if (rdio == null)
+		{
 			SharedPreferences settings = getPreferences(MODE_PRIVATE);
 			accessToken = settings.getString(PREF_ACCESSTOKEN, null);
 			accessTokenSecret = settings
 					.getString(PREF_ACCESSTOKENSECRET, null);
 
-			rdio = new Rdio(appKey, appSecret, accessToken, accessTokenSecret,
-					this, this);
+			rdio = new Rdio(ApiKeys.KEY_APPLICATION, ApiKeys.KEY_APP_SECRET,
+					accessToken, accessTokenSecret, this, this);
 
-			if (accessToken == null || accessTokenSecret == null) {
+			if (accessToken == null || accessTokenSecret == null)
+			{
 				// If either one is null, reset both of them
 				accessToken = accessTokenSecret = null;
 				Intent myIntent = new Intent(MainActivity.this,
 						OAuth1WebViewActivity.class);
 				myIntent.putExtra(OAuth1WebViewActivity.EXTRA_CONSUMER_KEY,
-						appKey);
+						ApiKeys.KEY_APPLICATION);
 				myIntent.putExtra(OAuth1WebViewActivity.EXTRA_CONSUMER_SECRET,
-						appSecret);
+						ApiKeys.KEY_APP_SECRET);
 				MainActivity.this.startActivityForResult(myIntent, 1);
 
-			} else {
+			}
+			else
+			{
 				rdio.prepareForPlayback();
 			}
 
@@ -107,23 +165,10 @@ public class MainActivity extends Activity implements RdioListener {
 
 	}
 
-	@Override
-	public void onDestroy() {
-		rdio.cleanup();
-		if (player != null) {
-			player.reset();
-			player.release();
-			player = null;
-		}
-		super.onDestroy();
-	}
-
-	/**
-	 * Get the current user, and load their collection to start playback with.
-	 * Requires authorization and the Rdio app to be installed.
-	 */
-	private void doSomething() {
-		if (accessToken == null || accessTokenSecret == null) {
+	private void doSomething()
+	{
+		if (accessToken == null || accessTokenSecret == null)
+		{
 			Toast.makeText(MainActivity.this, "Can't find the app!",
 					Toast.LENGTH_LONG).show();
 			return;
@@ -135,26 +180,33 @@ public class MainActivity extends Activity implements RdioListener {
 		args.add(new BasicNameValuePair(
 				"extras",
 				"followingCount,followerCount,username,displayName,subscriptionType,trialEndDate,actualSubscriptionType"));
-		rdio.apiCall("currentUser", args, new RdioApiCallback() {
+		rdio.apiCall("currentUser", args, new RdioApiCallback()
+		{
 			@Override
-			public void onApiSuccess(JSONObject result) {
+			public void onApiSuccess(JSONObject result)
+			{
 				dismissGetUserDialog();
-				try {
+				try
+				{
 					result = result.getJSONObject("result");
 					Log.i("THIS IS THE COLLECTION KEY", result.toString(2));
 
 					collectionKey = result.getString("key").replace('s', 'c');
 
 					LoadMoreTracks();
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					Log.e(TAG, "Failed to handle JSONObject: ", e);
 				}
 			}
 
 			@Override
-			public void onApiFailure(String methodName, Exception e) {
+			public void onApiFailure(String methodName, Exception e)
+			{
 				dismissGetUserDialog();
-				if (e instanceof RdioAuthorisationException) {
+				if (e instanceof RdioAuthorisationException)
+				{
 					Toast.makeText(MainActivity.this, "Don't have the app bro",
 							Toast.LENGTH_SHORT).show();
 				}
@@ -162,8 +214,10 @@ public class MainActivity extends Activity implements RdioListener {
 		});
 	}
 
-	private void LoadMoreTracks() {
-		if (accessToken == null || accessTokenSecret == null) {
+	private void LoadMoreTracks()
+	{
+		if (accessToken == null || accessTokenSecret == null)
+		{
 
 			Toast.makeText(this, getString(R.string.no_more_tracks),
 					Toast.LENGTH_LONG).show();
@@ -181,23 +235,28 @@ public class MainActivity extends Activity implements RdioListener {
 		List<NameValuePair> args = new LinkedList<NameValuePair>();
 		args.add(new BasicNameValuePair("keys", collectionKey));
 		args.add(new BasicNameValuePair("count", "50"));
-		rdio.apiCall("get", args, new RdioApiCallback() {
+		rdio.apiCall("get", args, new RdioApiCallback()
+		{
 			@Override
-			public void onApiFailure(String methodName, Exception e) {
+			public void onApiFailure(String methodName, Exception e)
+			{
 				dismissGetCollectionDialog();
 				Log.e("API CALL HAS FAILED", methodName + " failed: ", e);
 			}
 
 			@Override
-			public void onApiSuccess(JSONObject result) {
-				try {
+			public void onApiSuccess(JSONObject result)
+			{
+				try
+				{
 					result = result.getJSONObject("result");
 					result = result.getJSONObject(collectionKey);
 
 					List<Track> trackKeys = new LinkedList<Track>();
 					JSONArray tracks = result.getJSONArray("tracks");
 
-					for (int i = 0; i < tracks.length(); i++) {
+					for (int i = 0; i < tracks.length(); i++)
+					{
 						JSONObject trackObject = tracks.getJSONObject(i);
 						String key = trackObject.getString("key");
 						String name = trackObject.getString("name");
@@ -216,7 +275,9 @@ public class MainActivity extends Activity implements RdioListener {
 
 					next(true);
 
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					dismissGetCollectionDialog();
 					Log.e(TAG, "Failed to handle JSONObject: ", e);
 				}
@@ -224,8 +285,10 @@ public class MainActivity extends Activity implements RdioListener {
 		});
 	}
 
-	private void next(final boolean manualPlay) {
-		if (player != null) {
+	private void next(final boolean manualPlay)
+	{
+		if (player != null)
+		{
 			player.stop();
 			player.release();
 			player = null;
@@ -233,12 +296,14 @@ public class MainActivity extends Activity implements RdioListener {
 
 		final Track track = trackQueue.poll();
 
-		if (trackQueue.size() < 3) {
+		if (trackQueue.size() < 3)
+		{
 			Log.i(TAG, "Track queue depleted, loading more tracks");
 			LoadMoreTracks();
 		}
 
-		if (track == null) {
+		if (track == null)
+		{
 			Log.e(TAG, "Track is null!  Size of queue: " + trackQueue.size());
 			return;
 		}
@@ -247,29 +312,41 @@ public class MainActivity extends Activity implements RdioListener {
 		// buffering)
 		// Do this in a bkg thread so it doesn't block the main thread in
 		// .prepare()
-		AsyncTask<Track, Void, Track> task = new AsyncTask<Track, Void, Track>() {
+		
+		
+
+		
+		AsyncTask<Track, Void, Track> task = new AsyncTask<Track, Void, Track>()
+		{
 			@Override
-			protected Track doInBackground(Track... params) {
+			protected Track doInBackground(Track... params)
+			{
 				Track track = params[0];
-				try {
+				try
+				{
 					player = rdio
 							.getPlayerForTrack(track.key, null, manualPlay);
 					player.prepare();
-					player.setOnCompletionListener(new OnCompletionListener() {
+					player.setOnCompletionListener(new OnCompletionListener()
+					{
 						@Override
-						public void onCompletion(MediaPlayer mp) {
+						public void onCompletion(MediaPlayer mp)
+						{
 							next(false);
 						}
 					});
 					player.start();
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					Log.e("Test", "Exception " + e);
 				}
 				return track;
 			}
 
 			@Override
-			protected void onPostExecute(Track track) {
+			protected void onPostExecute(Track track)
+			{
 				updatePlayPause(true);
 			}
 		};
@@ -280,50 +357,63 @@ public class MainActivity extends Activity implements RdioListener {
 				+ track.artistName);
 	}
 
-	private void playPause() {
-		if (player != null) {
-			if (player.isPlaying()) {
+	private void playPause()
+	{
+		if (player != null)
+		{
+			if (player.isPlaying())
+			{
 				player.pause();
 				updatePlayPause(false);
-			} else {
+			}
+			else
+			{
 				player.start();
 				updatePlayPause(true);
 			}
-		} else {
+		}
+		else
+		{
 			next(true);
 		}
 	}
 
-	private void updatePlayPause(boolean playing) {
-		if (playing) {
+	private void updatePlayPause(boolean playing)
+	{
+		if (playing)
+		{
 			playPause.setImageResource(R.drawable.pause);
-		} else {
+		}
+		else
+		{
 			playPause.setImageResource(R.drawable.play);
 		}
 	}
 
 	@Override
-	public void onRdioReadyForPlayback() {
-		Log.i(TAG, "Rdio SDK is ready for playback");
+	public void onRdioReadyForPlayback()
+	{
 
-		if (accessToken != null && accessTokenSecret != null) {
+		if (accessToken != null && accessTokenSecret != null)
+		{
 			doSomething();
-		} else {
+		}
+		else
+		{
 			Toast.makeText(MainActivity.this, "Can't find the app!",
 					Toast.LENGTH_SHORT).show();
 		}
 	}
 
 	@Override
-	public void onRdioUserPlayingElsewhere() {
+	public void onRdioUserPlayingElsewhere()
+	{
 		Log.w(TAG, "Tell the user that playback is stopping.");
 	}
 
 	@Override
-	public void onRdioAuthorised(String accessToken, String accessTokenSecret) {
-		Log.i(TAG, "Application authorised, saving access token & secret.");
-		Log.d(TAG, "Access token: " + accessToken);
-		Log.d(TAG, "Access token secret: " + accessTokenSecret);
+	public void onRdioAuthorised(String accessToken, String accessTokenSecret)
+	{
 
 		SharedPreferences settings = getPreferences(MODE_PRIVATE);
 		Editor editor = settings.edit();
@@ -332,22 +422,26 @@ public class MainActivity extends Activity implements RdioListener {
 		editor.commit();
 	}
 
-	/*************************
-	 * Activity overrides
-	 *************************/
 	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == 1) {
-			if (resultCode == RESULT_OK) {
+	public void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if (requestCode == 1)
+		{
+			if (resultCode == RESULT_OK)
+			{
 				Log.v(TAG, "Login success");
-				if (data != null) {
+				if (data != null)
+				{
 					accessToken = data.getStringExtra("token");
 					accessTokenSecret = data.getStringExtra("tokenSecret");
 					onRdioAuthorised(accessToken, accessTokenSecret);
 					rdio.setTokenAndSecret(accessToken, accessTokenSecret);
 				}
-			} else if (resultCode == RESULT_CANCELED) {
-				if (data != null) {
+			}
+			else if (resultCode == RESULT_CANCELED)
+			{
+				if (data != null)
+				{
 					String errorCode = data
 							.getStringExtra(OAuth1WebViewActivity.EXTRA_ERROR_CODE);
 					String errorDescription = data
@@ -361,60 +455,54 @@ public class MainActivity extends Activity implements RdioListener {
 		}
 	}
 
-	/*************************
-	 * Dialog helpers
-	 *************************/
-	private void showGetUserDialog() {
-		if (getUserDialog == null) {
-			getUserDialog = new RdioProgress();
+	@Override
+	public void onDestroy()
+	{
+		rdio.cleanup();
+		if (player != null)
+		{
+			player.reset();
+			player.release();
+			player = null;
 		}
-
-		if (getUserDialog.isAdded()) {
-			return;
-		}
-
-		Bundle args = new Bundle();
-		args.putString("message",
-				getResources().getString(R.string.getting_user));
-
-		getUserDialog.setArguments(args);
-		getUserDialog.show(getFragmentManager(), "getUserDialog");
+		super.onDestroy();
 	}
 
-	private void dismissGetUserDialog() {
-		if (getUserDialog != null) {
-			getUserDialog.dismiss();
-		}
+	private void showGetUserDialog()
+	{
+		// mProgressBar.setVisibility(View.VISIBLE);
+		fm.setVisibility(View.VISIBLE);
 	}
 
-	private void showGetCollectionDialog() {
-		if (getCollectionDialog == null) {
-			getCollectionDialog = new RdioProgress();
-		}
-
-		if (getCollectionDialog.isAdded()) {
-			return;
-		}
-
-		Bundle args = new Bundle();
-		args.putString("message",
-				getResources().getString(R.string.getting_collection));
-
-		getCollectionDialog.setArguments(args);
-		getCollectionDialog.show(getFragmentManager(), "getCollectionDialog");
+	private void dismissGetUserDialog()
+	{
+		// mProgressBar.setVisibility(View.INVISIBLE);
+		fm.setVisibility(View.INVISIBLE);
 	}
 
-	private void dismissGetCollectionDialog() {
-		if (getCollectionDialog != null) {
-			getCollectionDialog.dismiss();
-		}
+	private void showGetCollectionDialog()
+	{
+
+		// mProgressBar.setVisibility(View.VISIBLE);
+		fm.setVisibility(View.VISIBLE);
+
 	}
 
-	private class GenericClickListener implements View.OnClickListener {
+	private void dismissGetCollectionDialog()
+	{
+
+		// mProgressBar.setVisibility(View.INVISIBLE);
+		fm.setVisibility(View.INVISIBLE);
+	}
+
+	private class GenericClickListener implements View.OnClickListener
+	{
 
 		@Override
-		public void onClick(View v) {
-			switch (v.getId()) {
+		public void onClick(View v)
+		{
+			switch (v.getId())
+			{
 			case R.id.greenthumbview:
 				next(true);
 				break;
@@ -425,12 +513,38 @@ public class MainActivity extends Activity implements RdioListener {
 				playPause();
 				break;
 			case R.id.albumArt:
-				playPause();
+				//playPause();
 				break;
 			default:
 				break;
 			}
 		}
 	}
+	
+    public static class CardFrontFragment extends Fragment {
+        public CardFrontFragment() {
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_card_front, container, false);
+        }
+        
+    }
+
+    /**
+     * A fragment representing the back of the card.
+     */
+    public static class CardBackFragment extends Fragment {
+        public CardBackFragment() {
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_card_back, container, false);
+        }
+    }
 
 }
