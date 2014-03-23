@@ -35,6 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
+            android:layout_below="@+id/albumArt"
             android:orientation="horizontal" >
 
             <ImageView
@@ -58,19 +59,20 @@
                 android:src="@drawable/greenthumb" />
         </LinearLayout>
 
+     
+
         <TextView
             android:id="@+id/songTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@id/playercontrols"
-            android:layout_below="@id/albumArt"
-            android:layout_margin="5dp"
+            android:layout_below="@+id/playPause"
+            android:layout_centerHorizontal="true"
             android:fontFamily="sans-serif-thin"
-            android:padding="5dp"
-            android:textSize="14dp" />
+        />
+
     </RelativeLayout>
 
-    <FrameLayout
+      <FrameLayout
         android:id="@+id/loadingcover"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
