@@ -12,9 +12,15 @@ import org.json.JSONObject;
 import Api.ApiKeys;
 import Models.Track;
 import Tasks.GetAlbumArtTask;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -41,7 +47,7 @@ import com.rdio.android.api.RdioApiCallback;
 import com.rdio.android.api.RdioListener;
 import com.rdio.android.api.services.RdioAuthorisationException;
 
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 public class MainActivity extends Activity implements RdioListener
 {
 
@@ -56,13 +62,14 @@ public class MainActivity extends Activity implements RdioListener
 	private static final String PREF_ACCESSTOKENSECRET = "prefs.accesstokensecret";
 
 	private static String collectionKey = null;
+	 private boolean mShowingBack = false;
 
-	private ImageView albumArt;
+	private static ImageView albumArt;
 	private ImageView playPause;
 	private TextView mSongName;
 	private ImageView mgreenThumb;
 	private ImageView mredThumb;
-	private FrameLayout fm;
+	private FrameLayout fragmentFrame;
 	private GestureDetector mGestureDetector;
 	private int mCurrentLayoutState, mCount;
 	private static final int SWIPE_MIN_DISTANCE = 120;
@@ -74,64 +81,85 @@ public class MainActivity extends Activity implements RdioListener
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		
 
 		mSongName = (TextView) findViewById(R.id.songTitle);
 		mgreenThumb = (ImageView) findViewById(R.id.greenthumbview);
 		mredThumb = (ImageView) findViewById(R.id.redthumbview);
 		playPause = (ImageView) findViewById(R.id.playPause);
-		albumArt = (ImageView) findViewById(R.id.albumArt);
+		
 		mgreenThumb.setOnClickListener(new GenericClickListener());
 		mredThumb.setOnClickListener(new GenericClickListener());
 		playPause.setOnClickListener(new GenericClickListener());
-		albumArt.setOnClickListener(new GenericClickListener());
-		fm = (FrameLayout) findViewById(R.id.loadingcover);
+		//albumArt.setOnClickListener(new GenericClickListener());
+		fragmentFrame = (FrameLayout) findViewById(R.id.image_frame);
 		trackQueue = new LinkedList<Track>();
-
-		albumArt.setOnTouchListener(new View.OnTouchListener()
+		
+		fragmentFrame.setOnTouchListener(new View.OnTouchListener()
 		{
-
+			
 			@Override
 			public boolean onTouch(View v, MotionEvent event)
 			{
-				return mGestureDetector.onTouchEvent(event);
+				flipCard();
+				return true;
 			}
 		});
 
-		mGestureDetector = new GestureDetector(this,
-				new GestureDetector.SimpleOnGestureListener()
-				{
-					@Override
-					public boolean onFling(MotionEvent e1, MotionEvent e2,
-							float velocityX, float velocityY)
-					{
-						try
-						{
-							if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
-								return false;
-							// right to left swipe
-							if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
-									&& Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY)
-							{
-								Toast.makeText(MainActivity.this, "Left Swipe",
-										Toast.LENGTH_SHORT).show();
-								next(true);
-							}
-							else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
-									&& Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY)
-							{
-								Toast.makeText(MainActivity.this,
-										"Right Swipe", Toast.LENGTH_SHORT)
-										.show();
-								next(true);
-							}
-						}
-						catch (Exception e)
-						{
-							// nothing
-						}
-						return false;
-					}
-				});
+		
+		FragmentManager fragmentManager = getFragmentManager();
+			
+				FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+				AlbumArtFragment fragment = new AlbumArtFragment();
+				fragmentTransaction.add(R.id.image_frame, fragment);
+				fragmentTransaction.commit();
+
+
+//		albumArt.setOnTouchListener(new View.OnTouchListener()
+//		{
+//
+//			@Override
+//			public boolean onTouch(View v, MotionEvent event)
+//			{
+//				return mGestureDetector.onTouchEvent(event);
+//			}
+//		});
+//
+//		mGestureDetector = new GestureDetector(this,
+//				new GestureDetector.SimpleOnGestureListener()
+//				{
+//					@Override
+//					public boolean onFling(MotionEvent e1, MotionEvent e2,
+//							float velocityX, float velocityY)
+//					{
+//						try
+//						{
+//							if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+//								return false;
+//							// right to left swipe
+//							if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
+//									&& Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY)
+//							{
+//								Toast.makeText(MainActivity.this, "Left Swipe",
+//										Toast.LENGTH_SHORT).show();
+//								next(true);
+//							}
+//							else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+//									&& Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY)
+//							{
+//								Toast.makeText(MainActivity.this,
+//										"Right Swipe", Toast.LENGTH_SHORT)
+//										.show();
+//								next(true);
+//							}
+//						}
+//						catch (Exception e)
+//						{
+//							// nothing
+//						}
+//						return false;
+//					}
+//				});
 
 		if (rdio == null)
 		{
@@ -352,9 +380,25 @@ public class MainActivity extends Activity implements RdioListener
 		};
 		task.execute(track);
 
-		new GetAlbumArtTask(albumArt).execute(track);
+		new GetAlbumArtTask(albumArt,track,this).execute(track);
 		mSongName.setText(track.trackName + " " + track.albumName + " "
 				+ track.artistName);
+		
+		notifyInStatusbar(track);
+		
+		
+	}
+	
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+	@SuppressLint("NewApi")
+	private void notifyInStatusbar(Track track)
+	{
+	
+
+	
+		// build notification
+		// the addAction re-use the same intent to keep the example short
+	
 	}
 
 	private void playPause()
@@ -471,20 +515,20 @@ public class MainActivity extends Activity implements RdioListener
 	private void showGetUserDialog()
 	{
 		// mProgressBar.setVisibility(View.VISIBLE);
-		fm.setVisibility(View.VISIBLE);
+		//fm.setVisibility(View.VISIBLE);
 	}
 
 	private void dismissGetUserDialog()
 	{
 		// mProgressBar.setVisibility(View.INVISIBLE);
-		fm.setVisibility(View.INVISIBLE);
+		//fm.setVisibility(View.INVISIBLE);
 	}
 
 	private void showGetCollectionDialog()
 	{
 
 		// mProgressBar.setVisibility(View.VISIBLE);
-		fm.setVisibility(View.VISIBLE);
+	//	fm.setVisibility(View.VISIBLE);
 
 	}
 
@@ -492,8 +536,48 @@ public class MainActivity extends Activity implements RdioListener
 	{
 
 		// mProgressBar.setVisibility(View.INVISIBLE);
-		fm.setVisibility(View.INVISIBLE);
+		//fm.setVisibility(View.INVISIBLE);
 	}
+	
+    @SuppressLint("NewApi")
+	private void flipCard() {
+        if (mShowingBack) {
+            getFragmentManager().popBackStack();
+            return;
+        }
+
+        // Flip to the back.
+
+        mShowingBack = true;
+
+        // Create and commit a new fragment transaction that adds the fragment for the back of
+        // the card, uses custom animations, and is part of the fragment manager's back stack.
+
+        getFragmentManager()
+                .beginTransaction()
+
+                // Replace the default fragment animations with animator resources representing
+                // rotations when switching to the back of the card, as well as animator
+                // resources representing rotations when flipping back to the front (e.g. when
+                // the system Back button is pressed).
+                .setCustomAnimations(
+                        R.animator.card_flip_right_in, R.animator.card_flip_right_out,
+                        R.animator.card_flip_left_in, R.animator.card_flip_left_out)
+
+                // Replace any fragments currently in the container view with a fragment
+                // representing the next page (indicated by the just-incremented currentPage
+                // variable).
+                .replace(R.id.image_frame, new CardBackFragment())
+
+                // Add this transaction to the back stack, allowing users to press Back
+                // to get to the front of the card.
+                .addToBackStack(null)
+
+                // Commit the transaction.
+                .commit();
+
+
+    }
 
 	private class GenericClickListener implements View.OnClickListener
 	{
@@ -521,15 +605,21 @@ public class MainActivity extends Activity implements RdioListener
 		}
 	}
 	
-    public static class CardFrontFragment extends Fragment {
-        public CardFrontFragment() {
+    public static class AlbumArtFragment extends Fragment {
+    	
+    	public ImageView artwork;
+        public AlbumArtFragment() {
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_card_front, container, false);
+            View root = inflater.inflate(R.layout.fragment_card_front, container, false);
+            
+            MainActivity.albumArt = (ImageView)root.findViewById(R.id.albumArt);
+            return root;
         }
+        
         
     }
 
