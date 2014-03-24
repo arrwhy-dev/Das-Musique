@@ -1,8 +1,10 @@
-
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/flip_art"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:src="@drawable/blank_album_art"
-    android:scaleType="centerCrop"
-    android:contentDescription="some basic text" />
+    android:id="@+id/albumArt"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:adjustViewBounds="true"
+    android:contentDescription="some basic text"
+    android:padding="5dp"
+    android:scaleType="fitXY"
+    android:src="@drawable/blank_album_art" />

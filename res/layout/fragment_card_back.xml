@@ -30,13 +30,6 @@
         android:layout_height="wrap_content"
         android:text="this is some text" />
 
-    <TextView style="?android:textAppearanceSmall"
-        android:textAllCaps="true"
-        android:textColor="#80ffffff"
-        android:textStyle="bold"
-        android:lineSpacingMultiplier="1.2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="this is some more text" />
+
 
 </LinearLayout>

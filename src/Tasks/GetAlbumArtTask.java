@@ -7,16 +7,17 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import Models.Track;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 
@@ -26,10 +27,14 @@ public class GetAlbumArtTask extends AsyncTask<Track, Void, Bitmap>
 {
 
 	private ImageView mImageView;
-
-	public GetAlbumArtTask(ImageView iview)
+	private Track mTrack;
+	private Context mContext;
+	
+	public GetAlbumArtTask(ImageView iview, Track track,Context context)
 	{
 		mImageView = iview;
+		mTrack = track;
+		mContext = context;
 	}
 
 	@Override
@@ -73,70 +78,21 @@ public class GetAlbumArtTask extends AsyncTask<Track, Void, Bitmap>
 	{
 		if (artwork != null)
 		{
-//			AlphaAnimation anim = new AlphaAnimation(0, 1);
-//			anim.setDuration(1000);
-//			anim.setRepeatCount(0);
-//			anim.setRepeatMode(Animation.REVERSE);
-//			anim.setAnimationListener(new AnimationListener()
-//			{
-//				
-//				@Override
-//				public void onAnimationStart(Animation animation)
-//				{
-//					//just run the animation
-//				}
-//				
-//				@Override
-//				public void onAnimationRepeat(Animation animation)
-//				{
-//					//do nothing here
-//				}
-//				
-//				@Override
-//				public void onAnimationEnd(Animation animation)
-//				{
-//					mImageView.setImageBitmap(artwork);
-//					
-//				}
-//			});
-//			
-//			mImageView.startAnimation(anim);
-
-			//fade in and out animations
-			
-			
 			Animation fadeIn = new AlphaAnimation(0, 1);
 			fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
 			fadeIn.setDuration(1000);
-
-//			Animation fadeOut = new AlphaAnimation(1, 0);
-//			fadeOut.setInterpolator(new AccelerateInterpolator()); //and this
-//			fadeOut.setStartOffset(1000);
-//			fadeOut.setDuration(1000);
-
-//			AnimationSet animation = new AnimationSet(false); //change to false
-//			animation.addAnimation(fadeIn);
-//			animation.addAnimation(fadeOut);
 			
 			mImageView.setVisibility(View.INVISIBLE);
 			mImageView.setImageBitmap(artwork);
 			fadeIn.setAnimationListener(new AnimationListener()
 			{
-				
 				@Override
 				public void onAnimationStart(Animation animation)
-				{
-					// TODO Auto-generated method stub
-					
-					
-				}
+				{}
 				
 				@Override
 				public void onAnimationRepeat(Animation animation)
-				{
-					// TODO Auto-generated method stub
-					
-				}
+				{}
 				
 				@Override
 				public void onAnimationEnd(Animation animation)
@@ -147,6 +103,21 @@ public class GetAlbumArtTask extends AsyncTask<Track, Void, Bitmap>
 				}
 			});
 			mImageView.startAnimation(fadeIn);
+			Notification n  = new Notification.Builder(mContext)
+	        .setContentTitle(mTrack.trackName)
+	        .setContentText(mTrack.albumName)
+	        .setSmallIcon(R.drawable.greenthumb)
+	        .setLargeIcon(artwork)
+	        .addAction(R.drawable.gt_notification_icon, "Like", null)
+			.addAction(R.drawable.rt_notification_icon,"DisLike",null)
+	        .setAutoCancel(true).build();
+
+	    
+	  
+	NotificationManager notificationManager = 
+	  (NotificationManager) mContext.getSystemService(mContext.NOTIFICATION_SERVICE);
+
+	notificationManager.notify(0, n);
 			
 		}
 		else
