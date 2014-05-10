@@ -1,8 +1,8 @@
-package Managers;
+package managers;
 
-import Api.ApiKeys;
 import android.content.Context;
 import android.content.Intent;
+import api.ApiKeys;
 
 import com.rdio.android.api.OAuth1WebViewActivity;
 import com.rdio.android.api.Rdio;

@@ -1,17 +1,17 @@
-package com.uwaterloo.dasmusique;
+package activites;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import managers.DrawerManager;
+import models.Track;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import Api.ApiKeys;
-import Managers.DrawerManager;
-import Models.Track;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -29,14 +29,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MenuItem;
-import android.widget.FrameLayout;
 import android.widget.Toast;
+import api.ApiKeys;
 
 import com.rdio.android.api.OAuth1WebViewActivity;
 import com.rdio.android.api.Rdio;
 import com.rdio.android.api.RdioApiCallback;
 import com.rdio.android.api.RdioListener;
 import com.rdio.android.api.services.RdioAuthorisationException;
+import com.uwaterloo.dasmusique.R;
+
+import fragments.MainFragment;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 public class MainActivity extends Activity implements RdioListener {
@@ -52,9 +55,7 @@ public class MainActivity extends Activity implements RdioListener {
 	private static final String PREF_ACCESSTOKENSECRET = "prefs.accesstokensecret";
 
 	private static String collectionKey = null;
-	private boolean mShowingBack = false;
 
-	private FrameLayout fragmentFrame;
 	private GestureDetector mGestureDetector;
 	private int mCurrentLayoutState, mCount;
 	private static final int SWIPE_MIN_DISTANCE = 120;

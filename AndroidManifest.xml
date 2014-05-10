@@ -14,11 +14,11 @@
 
     <application
         android:allowBackup="false"
-        android:theme="@style/Theme.Dasmusique"
         android:icon="@drawable/greenthumb"
-        android:label="@string/app_name" >
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Dasmusique" >
         <activity
-            android:name="com.uwaterloo.dasmusique.MainActivity"
+            android:name="activites.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>

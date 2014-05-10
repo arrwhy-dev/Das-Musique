@@ -1,7 +1,8 @@
-package com.uwaterloo.dasmusique;
+package fragments;
 
-import Models.Track;
-import Tasks.GetAlbumArtTask;
+import models.Track;
+import tasks.GetAlbumArtTask;
+import activites.MainActivity;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.uwaterloo.dasmusique.R;
 
 public class MainFragment extends Fragment {
 
@@ -48,9 +51,8 @@ public class MainFragment extends Fragment {
 
 	public void updateSongDetails(Track track) {
 
-		new GetAlbumArtTask(albumArt, track, getActivity()).execute(track);
-		mSongName.setText(track.trackName + " " + track.albumName + " "
-				+ track.artistName);
+		new GetAlbumArtTask(albumArt, track,mSongName, getActivity()).execute(track);
+		
 
 	}
 

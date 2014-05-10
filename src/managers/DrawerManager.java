@@ -1,4 +1,4 @@
-package Managers;
+package managers;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -13,8 +13,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.uwaterloo.dasmusique.MainFragment;
 import com.uwaterloo.dasmusique.R;
+
+import fragments.MainFragment;
 
 public class DrawerManager {
 
