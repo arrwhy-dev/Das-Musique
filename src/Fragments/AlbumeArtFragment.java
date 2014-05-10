@@ -29,7 +29,7 @@ public class AlbumeArtFragment extends Fragment {
 	}
 
 	public void updateAlbumArt(Track track) {
-		new GetAlbumArtTask(mAlbumArtView).execute(track);
+		new GetAlbumArtTask(mAlbumArtView, track, getActivity()).execute(track);
 
 	}
 
