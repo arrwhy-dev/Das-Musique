@@ -7,5 +7,7 @@
     <string name="getting_heavy_rotation">Loading Rdio heavy rotation&#8230;</string>
     <string name="now_playing">Playing: %1$s from %2$s by %3$s</string>
     <string name="no_more_tracks">Heavy rotation depleted&#8230; why not go install the Rdio app now?</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 
 </resources>

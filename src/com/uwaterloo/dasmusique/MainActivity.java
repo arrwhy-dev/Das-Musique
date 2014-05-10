@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import Api.ApiKeys;
+import Managers.DrawerManager;
 import Models.Track;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -18,6 +19,7 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.net.Uri;
@@ -26,6 +28,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -57,6 +60,7 @@ public class MainActivity extends Activity implements RdioListener {
 	private static final int SWIPE_MIN_DISTANCE = 120;
 	private static final int SWIPE_MAX_OFF_PATH = 250;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+	private DrawerManager mDrawerManager;
 
 	private MainFragment mFragment;
 
@@ -65,9 +69,15 @@ public class MainActivity extends Activity implements RdioListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
+		mDrawerManager = new DrawerManager(this, getFragmentManager());
+
 		FragmentManager fm = getFragmentManager();
 
-		mFragment = (MainFragment) fm.findFragmentById(R.id.mainfragment);
+		mFragment = (MainFragment) fm.findFragmentByTag("discovery");
+
+		if (mFragment == null) {
+			Toast.makeText(this, "NULL", Toast.LENGTH_SHORT).show();
+		}
 
 		trackQueue = new LinkedList<Track>();
 
@@ -97,6 +107,33 @@ public class MainActivity extends Activity implements RdioListener {
 
 		}
 
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+
+		if (mDrawerManager.onOptionsItemSelected(item)) {
+			return true;
+		}
+
+		return true;
+	}
+
+	@Override
+	public void setTitle(CharSequence title) {
+		getActionBar().setTitle(title);
+	}
+
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		mDrawerManager.getActionBarDrawerToggle().syncState();
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		mDrawerManager.getActionBarDrawerToggle().onConfigurationChanged(
+				newConfig);
 	}
 
 	private void doSomething() {
@@ -276,6 +313,7 @@ public class MainActivity extends Activity implements RdioListener {
 	private void updatePlayPause(boolean playing) {
 
 		mFragment.updatePlayPause(playing);
+
 	}
 
 	@Override
