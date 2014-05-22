@@ -1,7 +1,7 @@
 Das Musique™
 ===========
 
-![Alt text](http://s3.amazonaws.com/challengepost/photos/production/solution_photos/000/076/619/datas/xlarge.png?139136012 "Optional title")
+![Alt text](http://i57.tinypic.com/2ufdi89.png "Optional title")
 
 
 
